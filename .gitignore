@@ -1,0 +1,39 @@
+# ---- Python ----
+__pycache__/
+*.py[codz]
+*$py.class
+
+# ---- Environments ----
+.env
+.env.*
+!.env.example
+venv/
+env/
+myenv/
+
+# ---- Output / Generated ----
+output/
+
+# ---- Logs ----
+*.log
+
+# ---- OS ----
+.DS_Store
+Thumbs.db
+
+# ---- IDE ----
+.vscode/
+.idea/
+
+# ---- Build / dist ----
+build/
+dist/
+*.egg-info/
+
+# ---- Misc ----
+.ipynb_checkpoints
+.cursorignore
+.cursorindexingignore
+
+# ---- Project Specific ----
+frontend/js/config.js
