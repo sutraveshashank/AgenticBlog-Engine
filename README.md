@@ -37,13 +37,13 @@ Powered by **LangGraph** for stateful workflow execution and **Groq** for blazin
 ##  Project Architecture
 
 User Input / Trigger  
-        ↓  
+          ↓    
 🧭 Tutorial Agent (Topic Selection)  
-        ↓  
+          ↓  
 ✍️ Content Generation  
-        ↓  
+          ↓  
 ✔️ Validator Agent (Quality Check)  
-        ↓  
+          ↓  
 💾 Storage (Local / R2)  
 
 ---
