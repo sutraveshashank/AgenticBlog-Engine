@@ -43,39 +43,94 @@ Powered by **LangGraph** stateful cyclic DAG execution, **FastAPI** REST API Gat
 
 ---
 
-## 🏗️ System Architecture
+## 🏗️ Detailed System Architecture
+
+### 1. High-Level Multi-Agent Workflow
 
 ```mermaid
 graph TD
-    subgraph "External Triggers & Ingress"
-        A1["⏰ APScheduler Background Daemon"] --> B["FastAPI Gateway (/api/v1/trigger)"]
-        A2["⚡ Webhook / n8n Workflow"] --> B
-        A3["💻 CLI (python run.py)"] --> B
+    subgraph "1. Ingress & Trigger Layer"
+        T1["⏰ APScheduler Daemon<br/>(blogboard/services/scheduler.py)"] --> API["FastAPI Gateway<br/>(blogboard/api/app.py)"]
+        T2["⚡ n8n Workflow / Webhook<br/>(n8n_blogboard_workflow.json)"] --> API
+        T3["💻 Terminal CLI<br/>(blogboard/run.py)"] --> API
     end
 
-    subgraph "LangGraph Cyclic Multi-Agent Core"
-        B --> C{"Domain Router"}
-        C -- "Technical Domain" --> D["TutorialAgent"]
-        C -- "AI News Domain" --> E["NewsAgent"]
-        D --> F["ValidatorAgent (Supervisor)"]
-        E --> F
-        F -- "Draft Rejected (Revision Loop)" --> D
-        F -- "Approved" --> G["R2StorageService"]
+    subgraph "2. LangGraph Stateful Multi-Agent Graph (blogboard/graph/graph.py)"
+        API --> ROUTER{"Domain Router<br/>(route_initial)"}
+        ROUTER -- "domain in ['ml','dl','nlp','cv','genai','statistics']" --> TUTORIAL["TutorialAgent<br/>(blogboard/agents/tutorial_agent/agent.py)"]
+        ROUTER -- "domain == 'ainews'" --> NEWS["NewsAgent<br/>(blogboard/agents/news_agent/agent.py)"]
+        
+        subgraph "External Research Tools"
+            TOOL1["Tavily Search API<br/>(blogboard/tools/tavily_search.py)"]
+            TOOL2["The Guardian Search API<br/>(blogboard/tools/guardian_search.py)"]
+        end
+        
+        TUTORIAL <--> TOOL1
+        TUTORIAL <--> TOOL2
+        NEWS <--> TOOL2
+
+        TUTORIAL --> VALIDATOR["ValidatorAgent / Supervisor<br/>(blogboard/agents/validator_agent/agent.py)"]
+        NEWS --> VALIDATOR
+
+        VALIDATOR -- "Draft Rejected (feedback)" --> TUTORIAL
+        VALIDATOR -- "Draft Approved (or max revisions)" --> SAVE_NODE["Save & Metadata Node"]
     end
 
-    subgraph "Publishing & Distribution Layer"
-        G --> H["💾 Local Filesystem (blogboard/web/blogs/)"]
-        G --> I["☁️ Cloudflare R2 Object Bucket"]
-        G --> J["📣 NotificationDispatcher"]
-        J --> K["🐦 Twitter/X Thread (.json)"]
-        J --> L["💼 LinkedIn Post (.json)"]
-        J --> M["💬 Discord / Slack Webhooks"]
+    subgraph "3. Storage & Persistence Engine (blogboard/services/storage.py)"
+        SAVE_NODE --> STORAGE["R2StorageService"]
+        STORAGE --> LOCAL["💾 Local Filesystem<br/>(blogboard/web/blogs/{domain}/)"]
+        STORAGE --> R2["☁️ Cloudflare R2 Object Bucket"]
     end
 
-    subgraph "Frontend Layer"
-        H --> N["🌐 BlogBoard Web UI (http://localhost:8000/)"]
+    subgraph "4. Multi-Channel Notification Dispatcher (blogboard/services/dispatcher.py)"
+        SAVE_NODE --> DISPATCHER["NotificationDispatcher"]
+        DISPATCHER --> TWITTER["🐦 Twitter/X Threads<br/>(output/social/article-xxx.json)"]
+        DISPATCHER --> LINKEDIN["💼 LinkedIn Posts<br/>(output/social/article-xxx.json)"]
+        DISPATCHER --> WEBHOOKS["💬 Discord / Slack Webhooks"]
+    end
+
+    subgraph "5. Client-Side Web Frontend (blogboard/web/)"
+        LOCAL --> WEB_UI["🌐 BlogBoard Single Page Web App<br/>(http://localhost:8000/)"]
     end
 ```
+
+---
+
+### 2. Shared Agent State Schema (`BlogState`)
+
+The entire multi-agent graph communicates by passing a stateful typed dictionary ([`blogboard/graph/state.py`](file:///c:/Users/Shashank%20Suthrave/Documents/Multi%20agent%20blog%20generation/BlogBoard-AI-Blog-Generator/blogboard/graph/state.py)):
+
+```python
+class BlogState(TypedDict, total=False):
+    date: str              # Target date in YYYY-MM-DD format
+    domain: str            # Category domain (ml, dl, nlp, cv, genai, statistics, ainews)
+    topic: str             # Selected article topic/title
+    subtopics: str         # Key subtopic breakdown
+    draft: str             # Generated markdown content draft
+    feedback: str          # Validator evaluation feedback
+    revisions: int         # Active revision loop counter (max 3)
+    md_path: str           # Target relative path for markdown file
+    title: str             # Synchronized article H1 title
+    read_time: str         # Estimated reading time (e.g. '7 min')
+    slug: str              # URL-friendly slug identifier
+    dry_run: bool          # Preview flag (skips storage writes if True)
+```
+
+---
+
+### 3. Core Component Mapping
+
+| Architectural Layer | Core Module | Description |
+|---|---|---|
+| **API Gateway** | [`blogboard/api/app.py`](file:///c:/Users/Shashank%20Suthrave/Documents/Multi%20agent%20blog%20generation/BlogBoard-AI-Blog-Generator/blogboard/api/app.py) | FastAPI server hosting `/api/v1/trigger`, status endpoints, and static web mounting |
+| **Scheduler Daemon** | [`blogboard/services/scheduler.py`](file:///c:/Users/Shashank%20Suthrave/Documents/Multi%20agent%20blog%20generation/BlogBoard-AI-Blog-Generator/blogboard/services/scheduler.py) | APScheduler background service running stale-domain selection every 24 hours |
+| **Graph Orchestrator** | [`blogboard/graph/graph.py`](file:///c:/Users/Shashank%20Suthrave/Documents/Multi%20agent%20blog%20generation/BlogBoard-AI-Blog-Generator/blogboard/graph/graph.py) | LangGraph `StateGraph` compiled routing graph connecting all agents |
+| **Tutorial Agent** | [`blogboard/agents/tutorial_agent/agent.py`](file:///c:/Users/Shashank%20Suthrave/Documents/Multi%20agent%20blog%20generation/BlogBoard-AI-Blog-Generator/blogboard/agents/tutorial_agent/agent.py) | Agent drafting deep-dive technical tutorials with upfront title H1 formatting |
+| **News Agent** | [`blogboard/agents/news_agent/agent.py`](file:///c:/Users/Shashank%20Suthrave/Documents/Multi%20agent%20blog%20generation/BlogBoard-AI-Blog-Generator/blogboard/agents/news_agent/agent.py) | Agent gathering real-time AI news headlines and structuring digests |
+| **Validator Supervisor** | [`blogboard/agents/validator_agent/agent.py`](file:///c:/Users/Shashank%20Suthrave/Documents/Multi%20agent%20blog%20generation/BlogBoard-AI-Blog-Generator/blogboard/agents/validator_agent/agent.py) | Quality control supervisor enforcing completeness, accuracy, and title sync |
+| **Storage Abstraction** | [`blogboard/services/storage.py`](file:///c:/Users/Shashank%20Suthrave/Documents/Multi%20agent%20blog%20generation/BlogBoard-AI-Blog-Generator/blogboard/services/storage.py) | Dual-mode storage service writing to local `blogboard/web/blogs/` or Cloudflare R2 |
+| **Notification Dispatcher** | [`blogboard/services/dispatcher.py`](file:///c:/Users/Shashank%20Suthrave/Documents/Multi%20agent%20blog%20generation/BlogBoard-AI-Blog-Generator/blogboard/services/dispatcher.py) | Service constructing Twitter threads and LinkedIn posts into `output/social/` |
+| **Web Frontend** | [`blogboard/web/`](file:///c:/Users/Shashank%20Suthrave/Documents/Multi%20agent%20blog%20generation/BlogBoard-AI-Blog-Generator/blogboard/web/) | Dark-mode HTML/CSS/JS single-page web app with Marked.js and Highlight.js |
 
 ---
 
