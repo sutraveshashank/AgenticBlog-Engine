@@ -34,7 +34,15 @@ class R2StorageService:
 
     def get_object(self, key: str) -> Optional[str]:
         if self.client is None:
-            print(f"[INFO] Skipping R2 fetch → {key}")
+            # Local mode: read directly from blogboard/web/{key}
+            local_path = os.path.join("blogboard", "web", key.replace("/", os.sep))
+            if os.path.exists(local_path):
+                try:
+                    with open(local_path, "r", encoding="utf-8") as f:
+                        return f.read()
+                except Exception as e:
+                    print(f"[WARN] Failed to read local file {local_path}: {e}")
+                    return None
             return None
 
         try:
@@ -49,28 +57,24 @@ class R2StorageService:
             print(f"[ERROR] Unexpected error fetching {key}: {e}")
             return None
 
-    
-    
-
-
     def put_object(self, key: str, data: str, content_type: str = "text/plain") -> bool:
         if self.client is None:
-            # Create output folder
-            os.makedirs("output", exist_ok=True)
-
-            # Add timestamp to avoid overwrite
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-
-            # Clean filename
-            filename = key.replace("/", "_")
-
-            # Final path
-            local_path = os.path.join("output", f"{timestamp}_{filename}")
+            # Local mode: Write to blogboard/web/{key}
+            local_path = os.path.join("blogboard", "web", key.replace("/", os.sep))
+            os.makedirs(os.path.dirname(local_path), exist_ok=True)
 
             with open(local_path, "w", encoding="utf-8") as f:
                 f.write(data)
 
-            print(f"[INFO] Saved locally → {local_path}")
+            # Also save backup in output/ folder
+            os.makedirs("output", exist_ok=True)
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = key.replace("/", "_")
+            backup_path = os.path.join("output", f"{timestamp}_{filename}")
+            with open(backup_path, "w", encoding="utf-8") as f:
+                f.write(data)
+
+            print(f"  ✅ Saved locally → {local_path}")
             return True
 
         try:
@@ -87,13 +91,13 @@ class R2StorageService:
             return False
 
     def get_json(self, key: str) -> Optional[List[Dict[str, Any]]]:
-        """Fetches and parses JSON from R2."""
+        """Fetches and parses JSON from R2 or local storage."""
         data = self.get_object(key)
         if data:
             try:
                 return json.loads(data)
             except json.JSONDecodeError:
-                print(f"[WARN] Failed to decode JSON from {key}. Starting fresh start.")
+                print(f"[WARN] Failed to decode JSON from {key}.")
                 return []
         return []
 

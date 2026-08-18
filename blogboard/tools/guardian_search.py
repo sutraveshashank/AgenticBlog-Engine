@@ -5,9 +5,6 @@ from langchain_core.tools import BaseTool
 from blogboard.config.settings import app_settings
 import requests
 from datetime import datetime, timedelta
-from typing import Type
-from pydantic import BaseModel, Field
-from langchain_core.tools import BaseTool
 
 
 class GuardianSearchInput(BaseModel):

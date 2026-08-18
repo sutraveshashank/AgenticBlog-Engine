@@ -20,7 +20,7 @@ output/
 # ---- OS ----
 .DS_Store
 Thumbs.db
-
+    
 # ---- IDE ----
 .vscode/
 .idea/
@@ -36,4 +36,4 @@ dist/
 .cursorindexingignore
 
 # ---- Project Specific ----
-frontend/js/config.js
+blogboard/web/js/config.js

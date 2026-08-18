@@ -1,5 +1,19 @@
 [
   {
+    "id": "blogs/dl/article-20260818160806.md",
+    "category": "dl",
+    "topic": "Neural Architecture Search for Multi‑Modal Transformers in Autonomous Driving",
+    "subtopics": "Search Space Design for Multi‑Modal Inputs, Latency‑Aware Evaluation Metrics, Hardware‑Aware NAS Strategies, Real‑World Deployment Case Study in Vehicle Perception",
+    "title": "Neural Architecture Search for Multi‑Modal Transformers in Autonomous Driving",
+    "description": "",
+    "date": "2026-08-18",
+    "tags": [
+      "dl"
+    ],
+    "readTime": "7 min",
+    "file": "blogs/dl/article-20260818160806.md"
+  },
+  {
     "id": "blogs/dl/deep-learning-intro.md",
     "category": "dl",
     "title": "Deep Learning Intro",

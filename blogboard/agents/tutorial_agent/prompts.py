@@ -42,13 +42,19 @@ Return the result strictly as JSON:
 TUTORIAL_GENERATION_PROMPT = """
 You are a highly skilled technical writer.
 Domain/Category: {cat_label}
-Topic: {topic}
+Title/Topic Focus: {topic}
 Subtopics to cover: {subtopics}
 
 {validator_feedback}
 
-Your task is to write a comprehensive, highly engaging, and in-depth tutorial blog post in Markdown format.
-Use a professional tone, appropriate headers, and bold critical terms. Do not include a markdown codeblock around your entire response.
+Your task is to write a comprehensive, highly engaging, and in-depth tutorial blog post in Markdown format strictly based on the Title above.
+
+CRITICAL FORMATTING INSTRUCTIONS:
+1. You MUST start the Markdown response directly with '# {topic}' as the top H1 headline.
+2. Structure the entire article specifically around this title and the subtopics provided.
+3. Use professional technical tone, clear H2 and H3 headers, code blocks with syntax highlighting, and bold key concepts.
+4. Do NOT enclose your entire Markdown output inside backticks (```markdown ... ```).
 """
+
 
 

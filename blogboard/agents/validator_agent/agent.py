@@ -27,11 +27,14 @@ def validator_node(state: BlogState) -> BlogState:
     domain = state.get("domain")
     date = state.get("date", datetime.now().strftime("%Y-%m-%d"))
 
+    # Cap content length for evaluation prompt to prevent payload size errors
+    content_preview = content[:1000] if len(content) > 1000 else content
+
     prompt = prompt_manager.get_prompt(
         prompt_name="Validator_Prompt",
         fallback_prompt=VALIDATOR_PROMPT,
         topic=topic,
-        content=content
+        content=content_preview
     )
     
     llm_service = LLMAgentService(temperature=0.1) 
@@ -63,7 +66,8 @@ def validator_node(state: BlogState) -> BlogState:
     revision_needed = not approved
     
     if revision_needed:
-        print(f"  [AGENT] Draft REJECTED. Feedback: {feedback}")
+        safe_feedback = feedback.encode("ascii", "replace").decode("ascii")
+        print(f"  [AGENT] Draft REJECTED. Feedback: {safe_feedback}")
         return {
             **state,
             "revision_needed": True,
@@ -73,8 +77,22 @@ def validator_node(state: BlogState) -> BlogState:
         
     print(f"  [AGENT] Draft APPROVED! Generating Metadata and Saving to R2...")
     
+    # Ensure title is fallback to topic if empty
+    title = title.strip() if title else (topic or "Technical Article")
+    
+    # Synchronize top H1 header in Markdown content with title
+    if content.startswith("# "):
+        # Replace top H1 header with final title
+        content = re.sub(r"^#\s+.*$", f"# {title}", content, count=1, flags=re.MULTILINE)
+    else:
+        # Prepend H1 header if missing
+        content = f"# {title}\n\n{content}"
+
     # Save to R2
     slug_value = re.sub(r"[^\w\s-]", "", slug_value).strip("-")
+    if not slug_value:
+        slug_value = "article-" + datetime.now().strftime("%Y%m%d%H%M%S")
+        
     md_relative = f"blogs/{domain}/{slug_value}.md"
     storage = R2StorageService()
     

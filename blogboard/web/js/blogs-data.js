@@ -82,31 +82,43 @@ const ALL_CATEGORIES = ['ml', 'dl', 'nlp', 'cv', 'genai', 'ainews', 'statistics'
 /* ── Cache ─────────────────────────────────────────────── */
 const _cache = {};
 
-const R2_PUBLIC_URL = (typeof window !== 'undefined' && window.CONFIG && window.CONFIG.R2_PUBLIC_URL)
-  ? window.CONFIG.R2_PUBLIC_URL
-  : 'https://missing-config-js.r2.dev';
+const R2_PUBLIC_URL = (typeof window !== 'undefined' && window.CONFIG && window.CONFIG.R2_PUBLIC_URL && window.CONFIG.R2_PUBLIC_URL !== "https://your-r2-public-bucket-url.r2.dev")
+  ? window.CONFIG.R2_PUBLIC_URL.replace(/\/$/, '')
+  : '';
 
 /* ── Core Fetch ────────────────────────────────────────── */
 /**
- * Load articles.json from the Cloudflare R2 bucket.
+ * Load articles.json from R2 or local directory.
  * Returns [] if the request fails (i.e. empty category).
  */
 async function loadCategoryArticles(cat) {
   if (_cache[cat] !== undefined) return _cache[cat];
 
+  const primaryUrl = R2_PUBLIC_URL ? `${R2_PUBLIC_URL}/blogs/${cat}/articles.json` : `blogs/${cat}/articles.json?t=${Date.now()}`;
+
   try {
-    const res = await fetch(`${R2_PUBLIC_URL}/blogs/${cat}/articles.json`);
-    if (!res.ok) {
-      _cache[cat] = [];
-      return [];
+    const res = await fetch(primaryUrl, { cache: "no-store" });
+    if (res.ok) {
+      const data = await res.json();
+      _cache[cat] = Array.isArray(data) ? data : [];
+      return _cache[cat];
     }
-    const data = await res.json();
-    _cache[cat] = Array.isArray(data) ? data : [];
-    return _cache[cat];
-  } catch (_) {
-    _cache[cat] = [];
-    return [];
+  } catch (_) {}
+
+  // Fallback to local relative fetch if primary R2 fetch fails or is unconfigured
+  if (R2_PUBLIC_URL) {
+    try {
+      const localRes = await fetch(`blogs/${cat}/articles.json?t=${Date.now()}`, { cache: "no-store" });
+      if (localRes.ok) {
+        const localData = await localRes.json();
+        _cache[cat] = Array.isArray(localData) ? localData : [];
+        return _cache[cat];
+      }
+    } catch (_) {}
   }
+
+  _cache[cat] = [];
+  return [];
 }
 
 /**
@@ -129,23 +141,41 @@ async function getBlogsByCategory(cat, sort = 'newest') {
  * The id is generally the relative path "blogs/domain/slug.md" stored in the json.
  */
 async function getBlogById(id) {
-  // Try to parse category from path "blogs/{cat}/..."
-  const parts = id.split('/');
+  if (!id) return null;
+  const cleanId = id.replace(/\.mdc$/, '.md').replace(/^\//, '');
+  const parts = cleanId.split('/');
+
+  // Try targeted category search
   if (parts.length >= 3) {
     const cat = parts[1];
     if (CATEGORY_META[cat]) {
       const articles = await loadCategoryArticles(cat);
-      const found = articles.find(a => a.id === id || a.file === id);
+      const found = articles.find(a => a.id === cleanId || a.file === cleanId || (a.id && a.id.endsWith(parts[2])) || (a.file && a.file.endsWith(parts[2])));
       if (found) return found;
     }
   }
 
-  // Fallback brute force
+  // Fallback brute force search
   for (const cat of Object.keys(CATEGORY_META)) {
     const articles = await loadCategoryArticles(cat);
-    const found = articles.find(a => a.id === id || a.file === id);
+    const found = articles.find(a => a.id === cleanId || a.file === cleanId || (a.id && parts.length > 0 && a.id.endsWith(parts[parts.length - 1])));
     if (found) return found;
   }
+
+  // Dynamic fallback: if valid blog path, construct synthetic metadata so post.html can render it
+  if (cleanId.startsWith('blogs/') && cleanId.endsWith('.md')) {
+    const cat = parts.length >= 2 && CATEGORY_META[parts[1]] ? parts[1] : 'ml';
+    return {
+      id: cleanId,
+      category: cat,
+      title: 'Article View',
+      date: new Date().toISOString().split('T')[0],
+      readTime: '7 min',
+      file: cleanId,
+      tags: [cat]
+    };
+  }
+
   return null;
 }
 

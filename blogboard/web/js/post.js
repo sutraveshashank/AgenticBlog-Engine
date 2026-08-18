@@ -109,9 +109,16 @@ async function loadPost() {
         ).join('');
     }
 
-    // Fetch and render markdown from R2
+    // Fetch and render markdown from R2 or local directory
     try {
-        const response = await fetch(`${R2_PUBLIC_URL}/${blog.file}`);
+        const fetchUrl = R2_PUBLIC_URL ? `${R2_PUBLIC_URL}/${blog.file}` : `${blog.file}?t=${Date.now()}`;
+        let response = await fetch(fetchUrl, { cache: "no-store" });
+        
+        // Fallback to relative local path if primary fetch fails
+        if (!response.ok) {
+            response = await fetch(`${blog.file}?t=${Date.now()}`, { cache: "no-store" });
+        }
+
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
         const mdText = await response.text();
@@ -120,8 +127,8 @@ async function loadPost() {
     } catch (err) {
         showError(
             `Could not load the article file.<br>
-       <small>Expected URL: <code>${R2_PUBLIC_URL}/${blog.file}</code></small><br>
-       <small>Ensure your R2 bucket is public and the URL in blogs-data.js is correct.</small>`,
+       <small>Expected Path: <code>${blog.file}</code></small><br>
+       <small>Ensure the generated article file exists in your repository or R2 bucket.</small>`,
             contentEl
         );
         console.error('Failed to load blog post:', err);

@@ -1,5 +1,33 @@
 [
   {
+    "id": "blogs/ml/article-20260818130937.md",
+    "category": "ml",
+    "topic": "Mastering Machine Learning Evaluation Metrics",
+    "subtopics": "",
+    "title": "Mastering Machine Learning Evaluation Metrics",
+    "description": "",
+    "date": "2026-08-18",
+    "tags": [
+      "ml"
+    ],
+    "readTime": "6 min",
+    "file": "blogs/ml/article-20260818130937.md"
+  },
+  {
+    "id": "blogs/ml/article-20260818162843.md",
+    "category": "ml",
+    "topic": "Graph Neural Networks for Molecular Property Prediction in Drug Discovery",
+    "subtopics": "Architecture variations of GNNs for chemistry,Integrating quantum chemical features,Scalable training on massive compound libraries,Interpretability techniques for GNN-driven predictions",
+    "title": "Graph Neural Networks for Molecular Property Prediction in Drug Discovery",
+    "description": "",
+    "date": "2026-08-18",
+    "tags": [
+      "ml"
+    ],
+    "readTime": "6 min",
+    "file": "blogs/ml/article-20260818162843.md"
+  },
+  {
     "id": "blogs/ml/machine-learning-explained.md",
     "category": "ml",
     "title": "Machine Learning Explained",

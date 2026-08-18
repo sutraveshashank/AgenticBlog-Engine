@@ -4,8 +4,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class LLMSettings(BaseModel):
     API_KEY: str = Field(validation_alias=AliasChoices('API_KEY', 'api_key', 'GROQ_API_KEY', 'groq_api_key'))
-    MODEL_NAME: str = "llama-3.3-70b-versatile"
-    TEMPERATURE: float = 1.0
+    MODEL_NAME: str = "openai/gpt-oss-120b"
+    TEMPERATURE: float = 0.7
 
 class TagSettings(BaseModel):
     ml: Dict[str, str] = {"label": "Machine Learning", "shortLabel": "ML"}
