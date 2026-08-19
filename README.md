@@ -96,29 +96,10 @@ graph TD
 
 ---
 
-### 2. Shared Agent State Schema (`BlogState`)
-
-The entire multi-agent graph communicates by passing a stateful typed dictionary ([`blogboard/graph/state.py`](file:///c:/Users/Shashank%20Suthrave/Documents/Multi%20agent%20blog%20generation/BlogBoard-AI-Blog-Generator/blogboard/graph/state.py)):
-
-```python
-class BlogState(TypedDict, total=False):
-    date: str              # Target date in YYYY-MM-DD format
-    domain: str            # Category domain (ml, dl, nlp, cv, genai, statistics, ainews)
-    topic: str             # Selected article topic/title
-    subtopics: str         # Key subtopic breakdown
-    draft: str             # Generated markdown content draft
-    feedback: str          # Validator evaluation feedback
-    revisions: int         # Active revision loop counter (max 3)
-    md_path: str           # Target relative path for markdown file
-    title: str             # Synchronized article H1 title
-    read_time: str         # Estimated reading time (e.g. '7 min')
-    slug: str              # URL-friendly slug identifier
-    dry_run: bool          # Preview flag (skips storage writes if True)
-```
 
 ---
 
-### 3. Core Component Mapping
+### 2. Core Component Mapping
 
 | Architectural Layer | Core Module | Description |
 |---|---|---|
@@ -230,13 +211,6 @@ python blogboard/run.py
 python blogboard/run.py --topic "Understanding Diffusion Models in Generative AI" --domain "genai"
 ```
 
----
-
-### Option C: Trigger via Webhook API (PowerShell / cURL / n8n)
-
-```powershell
-Invoke-RestMethod -Uri "http://localhost:8000/api/v1/trigger" -Method Post -Body '{"domain":"nlp", "topic":"Large Language Model Tokenization"}' -ContentType "application/json"
-```
 
 ---
 
