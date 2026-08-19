@@ -78,11 +78,12 @@ class AutonomousScheduler:
             logger.info("[SCHEDULER] Scheduler is already active.")
             return
 
-        # Add interval job
+        # Add interval job with immediate first execution
         self.scheduler.add_job(
             self.run_automated_generation_job,
             trigger="interval",
             hours=interval_hours,
+            next_run_time=datetime.now(),
             id="daily_blog_generator",
             replace_existing=True
         )
