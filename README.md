@@ -224,8 +224,3 @@ python blogboard/run.py --topic "Understanding Diffusion Models in Generative AI
 | `/api/v1/status` | `GET` | Returns scheduler status & last updated dates per domain |
 | `/api/v1/health` | `GET` | Health check endpoint |
 
----
-
-## 📄 License
-
-Distributed under the MIT License. See `LICENSE` for details.
