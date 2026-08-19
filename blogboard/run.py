@@ -95,7 +95,7 @@ Examples
 
     if args.serve:
         import uvicorn
-        print("\n🚀 Starting BlogBoard FastAPI Gateway & Background Scheduler...")
+        print("\n🚀 Starting Agentic Blog Engine FastAPI Gateway & Background Scheduler...")
         print("🌐 Open http://localhost:8000/docs in your browser to view the API dashboard!\n")
         uvicorn.run("blogboard.api.app:app", host="127.0.0.1", port=8000, reload=False)
         return
@@ -106,7 +106,7 @@ Examples
 
     # ── Banner ────────────────────────────────────────────────────────────────
     print(f"\n{'='*55}")
-    print(f"  BlogBoard — LangGraph Article Generator")
+    print(f"  Agentic Blog Engine — LangGraph Multi-Agent Generator")
     print(f"  Date    : {date_str}")
     if args.topic:
         print(f"  Topic   : {args.topic}")

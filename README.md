@@ -1,4 +1,4 @@
-# 🚀 BlogBoard AI — Autonomous Multi-Agent Content Engine
+# 🚀 Agentic Blog Engine — Autonomous Multi-Agent Content Platform
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.141-green.svg)](https://fastapi.tiangolo.com/)

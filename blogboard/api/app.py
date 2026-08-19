@@ -16,8 +16,8 @@ logger = logging.getLogger("blogboard-api")
 from fastapi.staticfiles import StaticFiles
 
 app = FastAPI(
-    title="BlogBoard AI REST API Engine",
-    description="Autonomous Multi-Agent Blog Generation & Publishing Gateway",
+    title="Agentic Blog Engine REST API",
+    description="Autonomous Multi-Agent Content Generation & Publishing Gateway",
     version="1.0.0"
 )
 
