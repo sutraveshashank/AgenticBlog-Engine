@@ -61,11 +61,18 @@ class LLMAgentService:
         ]
         
         # Step 2: Bind the tools and LLM using LangGraph's prebuilt ReAct orchestrator
-        agent = create_react_agent(
-            model=self.llm,
-            tools=news_tools,
-            state_modifier=system_prompt
-        )
+        try:
+            agent = create_react_agent(
+                model=self.llm,
+                tools=news_tools,
+                prompt=system_prompt
+            )
+        except TypeError:
+            agent = create_react_agent(
+                model=self.llm,
+                tools=news_tools,
+                state_modifier=system_prompt
+            )
         return agent
         
     def get_custom_agent(self, tools: List[BaseTool], system_prompt: Optional[str] = None):
@@ -79,9 +86,16 @@ class LLMAgentService:
         Returns:
             CompiledGraph: A customizable runnable LangGraph ReAct agent.
         """
-        agent = create_react_agent(
-            model=self.llm,
-            tools=tools,
-            state_modifier=system_prompt
-        )
+        try:
+            agent = create_react_agent(
+                model=self.llm,
+                tools=tools,
+                prompt=system_prompt
+            )
+        except TypeError:
+            agent = create_react_agent(
+                model=self.llm,
+                tools=tools,
+                state_modifier=system_prompt
+            )
         return agent
