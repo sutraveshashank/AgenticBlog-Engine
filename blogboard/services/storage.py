@@ -8,6 +8,9 @@ from pydantic import BaseModel
 
 from blogboard.config.settings import app_settings
 
+BASE_WEB_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "web"))
+BASE_OUTPUT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "output"))
+
 class R2StorageService:
     """
     A unified, OOP-driven storage service for Cloudflare R2.
@@ -34,8 +37,8 @@ class R2StorageService:
 
     def get_object(self, key: str) -> Optional[str]:
         if self.client is None:
-            # Local mode: read directly from blogboard/web/{key}
-            local_path = os.path.join("blogboard", "web", key.replace("/", os.sep))
+            # Local mode: read directly from web directory
+            local_path = os.path.join(BASE_WEB_DIR, key.replace("/", os.sep))
             if os.path.exists(local_path):
                 try:
                     with open(local_path, "r", encoding="utf-8") as f:
@@ -59,18 +62,18 @@ class R2StorageService:
 
     def put_object(self, key: str, data: str, content_type: str = "text/plain") -> bool:
         if self.client is None:
-            # Local mode: Write to blogboard/web/{key}
-            local_path = os.path.join("blogboard", "web", key.replace("/", os.sep))
+            # Local mode: Write to web directory
+            local_path = os.path.join(BASE_WEB_DIR, key.replace("/", os.sep))
             os.makedirs(os.path.dirname(local_path), exist_ok=True)
 
             with open(local_path, "w", encoding="utf-8") as f:
                 f.write(data)
 
             # Also save backup in output/ folder
-            os.makedirs("output", exist_ok=True)
+            os.makedirs(BASE_OUTPUT_DIR, exist_ok=True)
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             filename = key.replace("/", "_")
-            backup_path = os.path.join("output", f"{timestamp}_{filename}")
+            backup_path = os.path.join(BASE_OUTPUT_DIR, f"{timestamp}_{filename}")
             with open(backup_path, "w", encoding="utf-8") as f:
                 f.write(data)
 
