@@ -106,8 +106,18 @@ def trigger_generation(payload: TriggerRequest, background_tasks: BackgroundTask
         topic=target_topic
     )
 
-# Mount web frontend at root URL using absolute path
+from fastapi.responses import FileResponse
+
+# Mount web frontend at root URL
 web_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "web"))
+
+@app.get("/")
+def read_root():
+    index_file = os.path.join(web_dir, "index.html")
+    if os.path.exists(index_file):
+        return FileResponse(index_file)
+    return {"status": "online", "message": "Agentic Blog Engine API Gateway"}
+
 if os.path.exists(web_dir):
     app.mount("/", StaticFiles(directory=web_dir, html=True), name="static")
 
