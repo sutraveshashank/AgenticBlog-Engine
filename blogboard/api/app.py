@@ -106,8 +106,8 @@ def trigger_generation(payload: TriggerRequest, background_tasks: BackgroundTask
         topic=target_topic
     )
 
-# Mount web frontend at root URL
-web_dir = os.path.join("blogboard", "web")
+# Mount web frontend at root URL using absolute path
+web_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "web"))
 if os.path.exists(web_dir):
     app.mount("/", StaticFiles(directory=web_dir, html=True), name="static")
 
